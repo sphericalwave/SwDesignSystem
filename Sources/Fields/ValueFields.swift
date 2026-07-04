@@ -30,20 +30,19 @@ public struct DoubleTF: View {
 /// Decimal input that also accepts negative values (signed keypad on iOS
 /// still needs the minus typed via the numbers-and-punctuation layout).
 public struct DoubleNegTF: View {
-    @Binding var value: Double?
-    let onNext: (() -> Void)?
+    @Binding var double: Double?
+    let placeholder: String
 
-    public init(value: Binding<Double?>, onNext: (() -> Void)? = nil) {
-        self._value = value
-        self.onNext = onNext
+    public init(double: Binding<Double?>, placeholder: String) {
+        self._double = double
+        self.placeholder = placeholder
     }
 
     public var body: some View {
-        TextField("", value: $value, format: .number)
+        TextField(placeholder, value: $double, format: .number)
             #if os(iOS)
             .keyboardType(.numbersAndPunctuation)
             #endif
-            .onSubmit { onNext?() }
     }
 }
 
