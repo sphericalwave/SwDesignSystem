@@ -17,11 +17,12 @@ final class SwDesignSystemTests: XCTestCase {
 
     func testValueFieldsInstantiate() {
         _ = DoubleTF(double: .constant(72.5), placeholder: "weight")
-        _ = DoubleNegTF(value: .constant(-3))
+        _ = DoubleNegTF(double: .constant(-3), placeholder: "±")
         _ = DoubleTFv2(double: .constant(1))
         _ = IntegerTF(int: .constant(10))
         _ = CurrencyTF(value: .constant(9.99))
         _ = LengthTF(inches: .constant(60), isInches: .constant(true))
         _ = MassTF(pounds: .constant(150), isPounds: .constant(true))
+        _ = HdrText(text: "Header")
     }
 }
