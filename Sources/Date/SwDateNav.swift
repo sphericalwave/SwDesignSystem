@@ -26,7 +26,7 @@ public struct SwDateNav: View {
     }
 
     public var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 6) {
             Image(systemName: "chevron.left")
                 .foregroundColor(.white)
                 .padding(.vertical, 8)
@@ -39,7 +39,6 @@ public struct SwDateNav: View {
 
             SwDatePicker(day: $day, components: [.date])
                 .fixedSize()
-                .padding(.horizontal, -6)
 
             Image(systemName: "chevron.right")
                 .foregroundColor(.white)
