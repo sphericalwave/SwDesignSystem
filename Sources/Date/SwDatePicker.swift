@@ -19,6 +19,7 @@ public struct SwDatePicker: View {
     
     public var body: some View {
         DatePicker("", selection: $day, displayedComponents: components)
+            .labelsHidden()
             .environment(\.colorScheme, .dark)
             .tint(.blue1)
     }
