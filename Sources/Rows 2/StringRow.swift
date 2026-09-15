@@ -30,7 +30,7 @@ public struct StringRow: View {
                 .multilineTextAlignment(.trailing)
                 .autocorrectionDisabled(true)
                 .textFieldStyle(.roundedBorder)
-                .frame(width: UIScreen.width / 2)
+                .frame(width: SwScreen.width / 2)
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -69,11 +69,11 @@ struct StringRow_Previews: PreviewProvider {
                                 .multilineTextAlignment(.trailing)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.body)
-                                .frame(width: UIScreen.width / 2)
+                                .frame(width: SwScreen.width / 2)
                         }
                     }
                 }
-                .listStyle(.grouped)
+                .swGroupedList()
                 .navigationTitle("String Rows")
             }
         }
@@ -110,7 +110,7 @@ public struct StringRow2<Content: View>: View {
             Spacer()
             
             content()
-                .frame(width: UIScreen.width / 2)
+                .frame(width: SwScreen.width / 2)
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -157,7 +157,7 @@ public struct StringRow3<Value: Hashable, Content: View>: View {
             Spacer()
             
             content()
-                .frame(width: UIScreen.width / 2)
+                .frame(width: SwScreen.width / 2)
         }
         .contentShape(Rectangle())
         .onTapGesture {

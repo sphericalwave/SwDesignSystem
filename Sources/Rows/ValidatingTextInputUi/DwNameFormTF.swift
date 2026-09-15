@@ -13,11 +13,11 @@ public struct DwNameFormTF: View {
 
     @Binding var textIn: String
     @Binding var valid: Bool
-    let contentType: UITextContentType
+    let contentType: PlatformTextContentType
     let color: Color = .blue1
     let label: String
 
-    public init(textIn: Binding<String>, valid: Binding<Bool>, contentType: UITextContentType, label: String) {
+    public init(textIn: Binding<String>, valid: Binding<Bool>, contentType: PlatformTextContentType, label: String) {
         self._textIn = textIn
         self._valid = valid
         self.contentType = contentType
@@ -32,7 +32,7 @@ public struct DwNameFormTF: View {
                 .textCase(.lowercase)
             
             TextField(placeholder, text: $textIn)
-                .keyboardType(.alphabet)
+                .swKeyboardType(.alphabet)
                 //.avenirFont(size: 14, color: color, type: .bold)
                 //.textFieldStyle(.roundedBorder)
                 .textContentType(contentType)

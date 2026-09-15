@@ -9,10 +9,10 @@
 // Buy me a ko-fi:  https://ko-fi.com/StewartLynch
 
 
-import UIKit
+import SwiftUI
 
-extension UIColor {
-    // Initializes a new UIColor instance from a hex string
+extension PlatformColor {
+    // Initializes a new color instance from a hex string
     convenience init?(hex: String) {
         var hexString = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         if hexString.hasPrefix("#") {
@@ -45,7 +45,7 @@ extension UIColor {
         self.init(red: CGFloat(red) / 255, green: CGFloat(green) / 255, blue: CGFloat(blue) / 255, alpha: CGFloat(alpha) / 255)
     }
 
-    // Returns a hex string representation of the UIColor instance
+    // Returns a hex string representation of the color instance
     func toHexString(includeAlpha: Bool = false) -> String? {
         // Get the red, green, and blue components of the UIColor as floats between 0 and 1
         guard let components = self.cgColor.components else {

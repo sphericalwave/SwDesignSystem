@@ -15,7 +15,7 @@ import SwiftUI
                 Text("Testing")
             }
         }
-        .listStyle(.grouped)
+        .swGroupedList()
         .navigationTitle("PlaceholderHdr")
     }
 }

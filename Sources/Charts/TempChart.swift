@@ -42,7 +42,7 @@ struct TempChart_Previews: PreviewProvider {
                     
                 }
             }
-            .listStyle(.grouped)
+            .swGroupedList()
             .navigationTitle("TempChart")
         }
     }

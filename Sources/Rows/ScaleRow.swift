@@ -13,7 +13,7 @@ import SwiftUI
     List {
         ScaleRow(name: "scale", scale: $scale)
     }
-    .listStyle(.grouped)
+    .swGroupedList()
 }
 
 @available(iOS 16.0, *)
@@ -35,7 +35,7 @@ public struct ScaleRow: View {
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 100)
                 .multilineTextAlignment(.trailing)
-                .keyboardType(.decimalPad)
+                .swKeyboardType(.decimalPad)
                 .font(.subheadline)
                 .accessibilityIdentifier("ScaleRow-textField")
         }

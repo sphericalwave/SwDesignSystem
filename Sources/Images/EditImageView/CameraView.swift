@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  ContentView.swift
 //  Camera
@@ -198,3 +199,5 @@ public struct CameraPreview: UIViewRepresentable {
         //
     }
 }
+
+#endif

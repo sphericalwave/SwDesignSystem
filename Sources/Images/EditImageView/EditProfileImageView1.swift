@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  EditProfileImageView.swift
 //  SwShared
@@ -108,3 +109,5 @@
 //            .preferredColorScheme(.dark)
 //    }
 //}
+
+#endif

@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  SelectImgUi.swift
 //  PhotoCrop
@@ -118,3 +119,5 @@ struct CustomImgPicker_Previews: PreviewProvider {
 //}
 
 
+
+#endif

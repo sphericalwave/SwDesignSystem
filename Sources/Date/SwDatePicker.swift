@@ -34,11 +34,11 @@ struct SwDatePicker_Previews: PreviewProvider {
                 Container(day: Date(), components: [.date, .hourAndMinute])
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .swTrailing) {
                     Container(day: Date(), components: [.date])
                 }
             }
-            .listStyle(.grouped)
+            .swGroupedList()
             .navigationTitle("SwDatePicker")
         }
         .tint(.white)

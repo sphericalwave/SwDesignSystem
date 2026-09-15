@@ -53,13 +53,13 @@ struct NavBtn_Previews: PreviewProvider {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .swLeading) {
                     HStack {
                         NavBtn(type: .edit) { }
                         NavBtn(type: .save) { }
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .swTrailing) {
                     NavBtn(type: .plus) { }
                 }
             }

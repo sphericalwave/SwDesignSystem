@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  UIScreen+.swift
 //  fu3l
@@ -13,3 +14,5 @@ public extension UIScreen {
     static let height = UIScreen.main.bounds.size.height
     static let size = UIScreen.main.bounds.size
 }
+
+#endif

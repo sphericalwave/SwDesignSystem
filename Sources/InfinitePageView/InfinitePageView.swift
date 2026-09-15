@@ -47,7 +47,7 @@ public struct InfinitePageView<C, T>: View where C: View, T: Hashable {
             view(nextIndex)
                 .tag(1)
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
+        .swPageTabStyle()
         .disabled(currentTab != 0) // FIXME: workaround to avoid glitch when swiping twice very quickly
     }
 }

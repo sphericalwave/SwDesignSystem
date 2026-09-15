@@ -42,7 +42,7 @@ public struct ValueRow: View {
 //                .textFieldStyle(.roundedBorder)
 //                .multilineTextAlignment(.trailing)
 //                .font(.body)
-//                .frame(maxWidth: UIScreen.width / 4)
+//                .frame(maxWidth: SwScreen.width / 4)
 //        }
 //        .contentShape(Rectangle())
 //        .onTapGesture {
@@ -75,7 +75,7 @@ struct ScaleRow_Previews: PreviewProvider {
                     Container(scale: "")
                 }
             }
-            .listStyle(.grouped)
+            .swGroupedList()
             .navigationTitle("Scale Row")
         }
     }

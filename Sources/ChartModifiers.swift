@@ -32,7 +32,7 @@ public extension View {
     func headerBackgroundMod() -> some View {
         self
             .padding(SwTheme.bottomPadding)
-            .frame(height: UIScreen.height / 4 + 50) //avoid paging indicators
+            .frame(height: SwScreen.height / 4 + 50) //avoid paging indicators
             .background(SwGradient())
             .listRowInsets(EdgeInsets()) //prevent squashing via List
     }
@@ -41,7 +41,7 @@ public extension View {
         self
             .chartBackgroundMod()
             .padding(SwTheme.bottomPadding)
-            //.frame(height: UIScreen.height / 4 + 50) //avoid paging indicators
+            //.frame(height: SwScreen.height / 4 + 50) //avoid paging indicators
             .background(SwGradient())
             .listRowInsets(EdgeInsets()) //prevent squashing via List
     }

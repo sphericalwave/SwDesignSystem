@@ -15,12 +15,12 @@ import SwiftUI
 extension Color {
 
     public init?(hex: String) {
-        guard let uiColor = UIColor(hex: hex) else { return nil }
-        self.init(uiColor: uiColor)
+        guard let platformColor = PlatformColor(hex: hex) else { return nil }
+        self.init(platformColor: platformColor)
     }
 
     public func toHexString(includeAlpha: Bool = false) -> String? {
-        return UIColor(self).toHexString(includeAlpha: includeAlpha)
+        return PlatformColor(self).toHexString(includeAlpha: includeAlpha)
     }
 
 }

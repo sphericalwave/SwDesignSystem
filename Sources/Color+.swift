@@ -31,6 +31,6 @@ public extension Color {
     static let grayAlert = Color(red: 237 / 255, green: 237 / 255, blue: 237 / 255)
 }
 
-public extension UIColor {
-    static let blue1 = UIColor(red: 25 / 255, green: 58 / 255, blue: 231 / 255, alpha: 1)
+public extension PlatformColor {
+    static let blue1 = PlatformColor(red: 25 / 255, green: 58 / 255, blue: 231 / 255, alpha: 1)
 }

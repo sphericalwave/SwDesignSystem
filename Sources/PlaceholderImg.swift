@@ -12,11 +12,11 @@ import SwiftUI
 @available(iOS 15.0, *)
 public struct PlaceholderImg: View {
     
-    var img: UIImage?
+    var img: PlatformImage?
     var fallback: String = "photo"
-    private let size = UIScreen.width / 9
+    private let size = SwScreen.width / 9
     
-    public init(img: UIImage?) {
+    public init(img: PlatformImage?) {
         self.img = img
     }
     
@@ -30,7 +30,7 @@ public struct PlaceholderImg: View {
     @ViewBuilder
     private var imageContent: some View {
         if let img = img {
-            Image(uiImage: img)
+            Image(platformImage: img)
                 .resizable()
         } else {
             Image(systemName: fallback)
@@ -52,22 +52,22 @@ struct PlaceholderImg_Previews: PreviewProvider {
                 }
                 
                 HStack {
-                    PlaceholderImg(img: UIImage(named: "AppIcon"))
+                    PlaceholderImg(img: PlatformImage(named: "AppIcon"))
                     VerticalRowDetailText(headline: "PlaceholderImg", subHeadline: "Test")
                 }
                 
                 HStack {
-                    PlaceholderImg(img: UIImage(named: "wtr_vortex"))
+                    PlaceholderImg(img: PlatformImage(named: "wtr_vortex"))
                     VerticalRowDetailText(headline: "PlaceholderImg", subHeadline: "Test")
                 }
                 
-                Text(UIScreen.width.formatted())
+                Text(SwScreen.width.formatted())
                 
-                Text((UIScreen.width / 9).formatted())
+                Text((SwScreen.width / 9).formatted())
                 
-                Text(UIScreen.height.formatted())
+                Text(SwScreen.height.formatted())
             }
-            .listStyle(.grouped)
+            .swGroupedList()
             .navigationTitle("PlaceholderImg")
         }
     }

@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  Image+.swift
 //  fu3l
@@ -17,3 +18,5 @@ public extension UIImage {
         return resizedImage
     }
 }
+
+#endif

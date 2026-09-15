@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  View+.swift
 //  PhotoCrop
@@ -285,3 +286,5 @@ struct CropView_Previews: PreviewProvider {
         }
     }
 }
+
+#endif

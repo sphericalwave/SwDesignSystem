@@ -19,7 +19,7 @@ public struct NumbersOnlyViewModifier: ViewModifier {
     
     public func body(content: Content) -> some View {
         content
-            .keyboardType(includeDecimal ? .decimalPad : .numberPad)
+            .swKeyboardType(includeDecimal ? .decimalPad : .numberPad)
             .onReceive(Just(text)) { newValue in
                 var numbers = "0123456789"
                 let decimalSeparator: String = Locale.current.decimalSeparator ?? "."

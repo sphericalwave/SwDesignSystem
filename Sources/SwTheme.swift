@@ -6,8 +6,10 @@
 //  Copyright © 2020 SphericalWaveSoftware. All rights reserved.
 //
 
-import UIKit
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 @available(iOS 14.0, *)
 public final class SwTheme {
@@ -20,9 +22,10 @@ public final class SwTheme {
     // MARK: - Configure
 
     /// The primary brand color as a SwiftUI Color. Apply via `.tint(SwTheme.primaryColor)` on your `WindowGroup`.
-    public private(set) static var primaryColor: Color = Color(uiColor: .blue1)
-    public private(set) static var onboardingBackground: UIColor = UIColor(red: 0.06, green: 0.07, blue: 0.09, alpha: 1)
+    public private(set) static var primaryColor: Color = Color(platformColor: .blue1)
+    public private(set) static var onboardingBackground: PlatformColor = PlatformColor(red: 0.06, green: 0.07, blue: 0.09, alpha: 1)
 
+    #if canImport(UIKit)
     /// Call once at app launch, e.g. in `App.init()`.
     public static func configure(
         primaryColor: UIColor = .blue1,
@@ -49,7 +52,7 @@ public final class SwTheme {
         appearance.configureWithTransparentBackground()
 
         let onboardingBackground = UIColor(red: 0.06, green: 0.07, blue: 0.09, alpha: 1)
-        
+
         let gradientImage = createGradientImage(from: background, to: onboardingBackground, size: CGSize(width: 1, height: 44))
         appearance.backgroundImage = gradientImage
 
@@ -117,4 +120,14 @@ public final class SwTheme {
             }
         }
     }
+    #elseif canImport(AppKit)
+    /// Call once at app launch. macOS has no UIAppearance theming, so only the tint color is set.
+    public static func configure(
+        primaryColor: PlatformColor = .blue1,
+        tintColor: PlatformColor = .white,
+        titleColor: PlatformColor = .white
+    ) {
+        SwTheme.primaryColor = Color(platformColor: primaryColor)
+    }
+    #endif
 }

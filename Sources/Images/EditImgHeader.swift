@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  EditImgHeader.swift
 //  CrtFdTests
@@ -51,3 +52,5 @@ struct EditImgHeader_Previews: PreviewProvider {
         }
     }
 }
+
+#endif

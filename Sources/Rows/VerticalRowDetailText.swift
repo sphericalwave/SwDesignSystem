@@ -52,6 +52,6 @@ struct VerticalRowDetailText_Previews: PreviewProvider {
                     //.padding()
             }
         }
-        .listStyle(.grouped)
+        .swGroupedList()
     }
 }

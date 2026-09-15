@@ -26,7 +26,7 @@ public struct SwTextEditor: View {
                 .padding(.bottom, 3)
             
             TextEditor(text: $comment)
-                .frame(minHeight: UIScreen.height / 9)
+                .frame(minHeight: SwScreen.height / 9)
                 .cornerRadius(9)
                 .overlay(
                     RoundedRectangle(cornerRadius: 3)

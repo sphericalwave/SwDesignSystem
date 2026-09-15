@@ -22,7 +22,7 @@ public struct DoubleTF: View {
     public var body: some View {
         TextField(placeholder, value: $double, format: .number)
             #if os(iOS)
-            .keyboardType(.decimalPad)
+            .swKeyboardType(.decimalPad)
             #endif
     }
 }
@@ -41,7 +41,7 @@ public struct DoubleNegTF: View {
     public var body: some View {
         TextField(placeholder, value: $double, format: .number)
             #if os(iOS)
-            .keyboardType(.numbersAndPunctuation)
+            .swKeyboardType(.numbersAndPunctuation)
             #endif
     }
 }
@@ -59,7 +59,7 @@ public struct DoubleTFv2: View {
     public var body: some View {
         TextField(placeholder, value: $double, format: .number)
             #if os(iOS)
-            .keyboardType(.decimalPad)
+            .swKeyboardType(.decimalPad)
             #endif
     }
 }
@@ -75,7 +75,7 @@ public struct IntegerTF: View {
     public var body: some View {
         TextField("", value: $int, format: .number)
             #if os(iOS)
-            .keyboardType(.numberPad)
+            .swKeyboardType(.numberPad)
             #endif
     }
 }
@@ -92,7 +92,7 @@ public struct CurrencyTF: View {
         TextField("", value: $value,
                   format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
             #if os(iOS)
-            .keyboardType(.decimalPad)
+            .swKeyboardType(.decimalPad)
             #endif
     }
 }
@@ -111,7 +111,7 @@ public struct LengthTF: View {
     public var body: some View {
         TextField(isInches ? "in" : "cm", value: $inches, format: .number)
             #if os(iOS)
-            .keyboardType(.decimalPad)
+            .swKeyboardType(.decimalPad)
             #endif
     }
 }
@@ -130,7 +130,7 @@ public struct MassTF: View {
     public var body: some View {
         TextField(isPounds ? "lbs" : "kg", value: $pounds, format: .number)
             #if os(iOS)
-            .keyboardType(.decimalPad)
+            .swKeyboardType(.decimalPad)
             #endif
     }
 }

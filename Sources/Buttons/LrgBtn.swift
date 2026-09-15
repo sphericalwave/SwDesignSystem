@@ -101,10 +101,10 @@ struct SaveBtn_Previews: PreviewProvider {
                     
                     DeleteBtn() {  }
                 }
-                .listStyle(.grouped)
+                .swGroupedList()
                 .navigationTitle("SaveBtn")
                 .toolbar {
-                    ToolbarItem(placement: .bottomBar) {
+                    ToolbarItem(placement: .swBottomBar) {
                         LrgBtn(type: .custom("Add To Journal"), didTap: { msg = "didTap save" })
                             .buttonStyle(.bordered)
 

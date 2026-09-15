@@ -24,7 +24,7 @@ private struct DiscardSaveToolbarModifier: ViewModifier {
             .navigationBarBackButtonHidden(hasChanges)
             .toolbar {
                 if hasChanges {
-                    ToolbarItemGroup(placement: .bottomBar) {
+                    ToolbarItemGroup(placement: .swBottomBar) {
                         Button("Discard") {
                             discardAction?()
                         }

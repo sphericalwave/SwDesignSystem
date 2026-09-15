@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  Crop.swift
 //  PhotoCrop
@@ -99,3 +100,5 @@ public enum CropMethod: Equatable {
         }
     }
 }
+
+#endif

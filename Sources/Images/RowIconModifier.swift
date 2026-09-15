@@ -5,7 +5,7 @@ public extension Image {
         resizable()
             .foregroundStyle(.secondary)
             .scaledToFit()
-            .frame(width: UIScreen.width / 11, height: UIScreen.width / 11)
+            .frame(width: SwScreen.width / 11, height: SwScreen.width / 11)
             .cornerRadius(SwTheme.cornerRadius)
     }
 }

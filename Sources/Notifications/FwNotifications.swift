@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  LocalNotificationManager.swift
 //  fu3l
@@ -148,3 +149,5 @@ extension FwNotifications: UNUserNotificationCenterDelegate {
     }
     
 }
+
+#endif

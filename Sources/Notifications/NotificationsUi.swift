@@ -1,3 +1,4 @@
+#if canImport(UIKit) // iOS-only file: UIKit camera/crop/appearance/notification APIs
 //
 //  NotificationsListUi.swift
 //  fu3l
@@ -131,3 +132,5 @@ struct NotificationsListView_Previews: PreviewProvider {
         NotificationsUi(lnManager: FwNotifications())
     }
 }
+
+#endif

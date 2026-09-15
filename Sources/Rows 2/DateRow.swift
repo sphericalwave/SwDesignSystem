@@ -54,6 +54,6 @@ struct DateRow_Previews: PreviewProvider {
             DateRow(date: .constant(Date()), label: "Birthday")
             DateRow(date: .constant(Date()), label: "Birthday", components: [.date])
         }
-        .listStyle(.grouped)
+        .swGroupedList()
     }
 }
