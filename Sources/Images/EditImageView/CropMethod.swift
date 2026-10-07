@@ -57,6 +57,15 @@ public enum CropMethod: Equatable {
         return s
     }
     
+    /// The on-screen crop frame for this image. Same as `size()`, except
+    /// `.original` takes the image's own aspect ratio.
+    public func size(for imageSize: CGSize) -> CGSize {
+        guard self == .original, imageSize.width > 0, imageSize.height > 0 else { return size() }
+        let box = size()
+        let fit = min(box.width / imageSize.width, box.height / imageSize.height)
+        return CGSize(width: imageSize.width * fit, height: imageSize.height * fit)
+    }
+
     public func size() -> CGSize{
         let screenWidth = UIScreen.main.bounds.width
         let screenHeight = UIScreen.main.bounds.height

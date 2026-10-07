@@ -9,6 +9,188 @@
 import SwiftUI
 import PhotosUI
 
+/// Pan and zoom of an image inside a crop frame. `offset` is in points of the
+/// frame, `scale` is on top of the aspect-fill fit (1 = just covers the frame).
+public struct CropTransform: Equatable {
+    public var scale: CGFloat
+    public var offset: CGSize
+
+    public init(scale: CGFloat = 1, offset: CGSize = .zero) {
+        self.scale = scale
+        self.offset = offset
+    }
+
+    /// Pulls the image back so it still covers the whole frame.
+    func clamped(image: CGSize, frame: CGSize) -> CropTransform {
+        let s = max(1, scale)
+        let fill = image.width > 0 && image.height > 0
+            ? max(frame.width / image.width, frame.height / image.height) : 1
+        let maxX = max(0, (image.width * fill * s - frame.width) / 2)
+        let maxY = max(0, (image.height * fill * s - frame.height) / 2)
+        return CropTransform(scale: s, offset: CGSize(width: min(max(offset.width, -maxX), maxX),
+                                                      height: min(max(offset.height, -maxY), maxY)))
+    }
+}
+
+/// The crop frame with pan and pinch, and no navigation chrome — host it in
+/// your own stack, and from your own Done call
+/// `image.cropped(to: method, transform: transform)`.
+@available(iOS 17.0, *)
+public struct CropEditor: View {
+    let image: UIImage
+    let method: CropMethod
+    @Binding var transform: CropTransform
+
+    @State private var baseScale: CGFloat = 1
+    @State private var baseOffset: CGSize = .zero
+
+    public init(image: UIImage, method: CropMethod, transform: Binding<CropTransform>) {
+        self.image = image
+        self.method = method
+        self._transform = transform
+    }
+
+    public var body: some View {
+        let frame = method.size(for: image.size)
+        Image(uiImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: frame.width, height: frame.height)
+            .scaleEffect(transform.scale)
+            .offset(transform.offset)
+            .clipShape(method == .circle ? AnyShape(Circle()) : AnyShape(Rectangle()))
+            .overlay { CropGrid(circle: method == .circle) }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        transform.offset = CGSize(width: baseOffset.width + value.translation.width,
+                                                  height: baseOffset.height + value.translation.height)
+                    }
+                    .onEnded { _ in settle(frame: frame) }
+                    .simultaneously(with: MagnifyGesture()
+                        .onChanged { value in
+                            transform.scale = max(1, baseScale * value.magnification)
+                        }
+                        .onEnded { _ in settle(frame: frame) })
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onAppear { syncBase() }
+            .onChange(of: method) {
+                transform = CropTransform()
+                syncBase()
+            }
+    }
+
+    private func settle(frame: CGSize) {
+        let clamped = transform.clamped(image: image.size, frame: frame)
+        if clamped.offset != transform.offset {
+            haptics(.medium)
+        }
+        withAnimation(.easeIn(duration: 0.2)) { transform = clamped }
+        syncBase()
+    }
+
+    private func syncBase() {
+        baseScale = transform.scale
+        baseOffset = transform.offset
+    }
+}
+
+/// Rule-of-thirds grid, or a dimmed surround for a circle.
+private struct CropGrid: View {
+    let circle: Bool
+
+    var body: some View {
+        if circle {
+            ZStack {
+                Rectangle()
+                    .fill(.black.opacity(0.5))
+                    .mask {
+                        Rectangle()
+                            .overlay {
+                                Circle()
+                                    .blendMode(.destinationOut)
+                            }
+                    }
+                Circle()
+                    .strokeBorder(.white, lineWidth: 2)
+            }
+            .allowsHitTesting(false)
+        } else {
+            ZStack {
+                HStack {
+                    ForEach(1...2, id: \.self) { _ in
+                        Rectangle()
+                            .fill(.white.opacity(0.7))
+                            .frame(width: 1)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                VStack {
+                    ForEach(1...2, id: \.self) { _ in
+                        Rectangle()
+                            .fill(.white.opacity(0.7))
+                            .frame(height: 1)
+                            .frame(maxHeight: .infinity)
+                    }
+                }
+            }
+            .allowsHitTesting(false)
+        }
+    }
+}
+
+public extension UIImage {
+    /// The part of the image inside the crop frame, cut from the original
+    /// pixels — so the result keeps the photo's full resolution rather than
+    /// the size it was shown at. A circle crop comes back with a transparent
+    /// surround. nil if the image has no bitmap.
+    func cropped(to method: CropMethod, transform: CropTransform) -> UIImage? {
+        let upright = uprighted()
+        guard let cg = upright.cgImage else { return nil }
+        let pixels = CGSize(width: cg.width, height: cg.height)
+        let frame = method.size(for: upright.size)
+        let t = transform.clamped(image: upright.size, frame: frame)
+
+        // Frame points per pixel once fitted and zoomed.
+        let k = max(frame.width / pixels.width, frame.height / pixels.height) * t.scale
+        let width = frame.width / k
+        let height = frame.height / k
+        let rect = CGRect(x: pixels.width / 2 - t.offset.width / k - width / 2,
+                          y: pixels.height / 2 - t.offset.height / k - height / 2,
+                          width: width, height: height)
+            .integral
+            .intersection(CGRect(origin: .zero, size: pixels))
+        guard !rect.isEmpty, let cut = cg.cropping(to: rect) else { return nil }
+        let result = UIImage(cgImage: cut, scale: 1, orientation: .up)
+        return method == .circle ? result.circleMasked() : result
+    }
+
+    /// Redrawn with its orientation applied, so `cgImage` matches what's seen.
+    private func uprighted() -> UIImage {
+        guard imageOrientation != .up else { return self }
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = scale
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+
+    private func circleMasked() -> UIImage {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = scale
+        format.opaque = false
+        let rect = CGRect(origin: .zero, size: size)
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIBezierPath(ovalIn: rect).addClip()
+            draw(in: rect)
+        }
+    }
+}
+
+/// Full-screen crop with its own navigation bar, Cancel, aspect picker and
+/// Done. To own the navigation and Done yourself, use `CropEditor`.
 @available(iOS 17.0, *)
 public struct CropView: View {
 
@@ -16,13 +198,9 @@ public struct CropView: View {
     var img: UIImage?
     var onCrop: (UIImage?, Bool) -> ()
     var aspectRatios: [CropMethod]
-    
+
     @Environment(\.dismiss) var dismiss
-    @State private var scale: CGFloat = 1
-    @State private var lastScale: CGFloat = 0
-    @State private var offset: CGSize = .zero
-    @State private var lastStoredOffset: CGSize = .zero
-    @GestureState var isInteracting: Bool = false
+    @State private var transform = CropTransform()
     @State private var selectedCrop: CropMethod
     @State private var showAspectRatioPicker: Bool = false
 
@@ -33,10 +211,10 @@ public struct CropView: View {
         self.onCrop = onCrop
         self._selectedCrop = State(initialValue: crop)
     }
-    
+
     public var body: some View {
         NavigationStack {
-            img()
+            editor
                 .navigationTitle("Crop View")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.visible, for: .navigationBar)
@@ -54,7 +232,7 @@ public struct CropView: View {
                                 .fontWeight(.regular)
                         }
                     }
-                    
+
                     ToolbarItemGroup(placement: .bottomBar) {
                         Button {
                             showAspectRatioPicker = true
@@ -68,17 +246,12 @@ public struct CropView: View {
                             }
                         }
                         .tint(.white)
-                        
+
                         Spacer()
-                        
+
                         Button(action: {
-                            //convert view to image
-                            let renderer = ImageRenderer(content: img(hideGrids: true))
-                            renderer.proposedSize = .init(selectedCrop.size())
-                            if let image = renderer.uiImage {
-                                // Apply circular mask if circle crop is selected
-                                let croppedImage = selectedCrop == .circle ? applyCircularMask(to: image) : image
-                                onCrop(croppedImage, true)
+                            if let image = img?.cropped(to: selectedCrop, transform: transform) {
+                                onCrop(image, true)
                             }
                             else {
                                 onCrop(nil, false)
@@ -99,7 +272,6 @@ public struct CropView: View {
                         Button(aspectRatio.name()) {
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 selectedCrop = aspectRatio
-                                resetTransform()
                             }
                         }
                     }
@@ -107,174 +279,15 @@ public struct CropView: View {
                 }
         }
     }
-    
-    private func resetTransform() {
-        scale = 1
-        lastScale = 0
-        offset = .zero
-        lastStoredOffset = .zero
-    }
-    
+
     @ViewBuilder
-    func img(hideGrids: Bool = false) -> some View {
-        let cropSize = selectedCrop.size()
-        GeometryReader {
-            let size = $0.size
-            if let img {
-                Image(uiImage: img)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .overlay(content: {
-                        GeometryReader { proxy in
-                            let rect = proxy.frame(in: .named("CROPVIEW"))
-                            Color.clear
-                                .onChange(of: isInteracting) {
-                                    //true dragging
-                                    //false stopped dragging
-                                    //w geometryReader we can now read minX, Y etc of image
-                                    
-                                    withAnimation(.easeIn(duration: 0.2)) {
-                                        if rect.minX > 0 {
-                                            //resetting to last location
-                                            offset.width = (offset.width - rect.minX)
-                                            haptics(.medium)
-                                        }
-                                        if rect.minY > 0 {
-                                            //resetting to last location
-                                            offset.height = (offset.height - rect.minY)
-                                            haptics(.medium)
-                                        }
-                                        
-                                        if rect.maxX < size.width {
-                                            //resetting to last location
-                                            offset.width = (rect.minX - offset.width)
-                                            haptics(.medium)
-                                        }
-                                        if rect.maxY < size.height {
-                                            //resetting to last location
-                                            offset.height = (rect.minY - offset.height)
-                                            haptics(.medium)
-                                        }
-                                    }
-                                    
-                                    if !isInteracting {
-                                        lastStoredOffset = offset
-                                    }
-                                    
-                                }
-                        }
-                    })
-                    .frame(size)
-            }
-        }
-        .scaleEffect(scale)
-        .offset(offset)
-        .clipShape(selectedCrop == .circle ? AnyShape(Circle()) : AnyShape(Rectangle()))
-        .overlay(content: {
-            if !hideGrids {
-                grids()
-            }
-        }
-        )
-        .coordinateSpace(name: "CROPVIEW")
-        .gesture(
-            DragGesture()
-                .updating($isInteracting, body: { _, out, _ in
-                    out = true
-                })
-                .onChanged { value in
-                    let translation = value.translation
-                    offset = CGSize(width: translation.width + lastStoredOffset.width, height: translation.height + lastStoredOffset.height)
-                }
-        )
-        .gesture(
-            MagnificationGesture()
-                .updating($isInteracting, body: { _ , out, _ in
-                    out = true
-                })
-                .onChanged { value in
-                    let updatedScale = value + lastScale
-                    scale = (updatedScale < 1 ? 1: updatedScale)
-                }
-                .onEnded { value in
-                    withAnimation(.easeIn(duration: 0.2)) {
-                        if scale < 1 {
-                            scale = 1
-                            lastScale = 0
-                        }
-                        else {
-                            lastScale = scale - 1
-                        }
-                    }
-                }
-        )
-        .frame(cropSize)
-    }
-    
-    @ViewBuilder
-    func grids() -> some View {
-        if selectedCrop == .circle {
-            // Circular crop overlay with dimmed outside area
-            GeometryReader { geometry in
-                ZStack {
-                    // Dimmed overlay for the area outside the circle
-                    Rectangle()
-                        .fill(.black.opacity(0.5))
-                        .mask {
-                            Rectangle()
-                                .overlay {
-                                    Circle()
-                                        .blendMode(.destinationOut)
-                                }
-                        }
-                    
-                    // White circle border
-                    Circle()
-                        .strokeBorder(.white, lineWidth: 2)
-                }
-            }
+    private var editor: some View {
+        if let img {
+            CropEditor(image: img, method: selectedCrop, transform: $transform)
         } else {
-            // Standard rectangular grid
-            ZStack {
-                HStack {
-                    ForEach(1...2, id: \.self) { _ in
-                        Rectangle()
-                            .fill(.white.opacity(0.7))
-                            .frame(width: 1)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                
-                VStack {
-                    ForEach(1...2, id: \.self) { _ in
-                        Rectangle()
-                            .fill(.white.opacity(0.7))
-                            .frame(height: 1)
-                            .frame(maxHeight: .infinity)
-                    }
-                }
-            }
+            ProgressView()
+                .tint(.white)
         }
-    }
-    
-    private func applyCircularMask(to image: UIImage) -> UIImage {
-        let size = image.size
-        let rect = CGRect(origin: .zero, size: size)
-        
-        UIGraphicsBeginImageContextWithOptions(size, false, image.scale)
-        defer { UIGraphicsEndImageContext() }
-        
-        guard let context = UIGraphicsGetCurrentContext() else { return image }
-        
-        // Create circular path
-        let circlePath = UIBezierPath(ovalIn: rect)
-        context.addPath(circlePath.cgPath)
-        context.clip()
-        
-        // Draw the image
-        image.draw(in: rect)
-        
-        return UIGraphicsGetImageFromCurrentImageContext() ?? image
     }
 }
 
@@ -282,7 +295,7 @@ public struct CropView: View {
 struct CropView_Previews: PreviewProvider {
     static var previews: some View {
         CropView(crop: .square, img: UIImage(named: "testPhoto")) { _, _ in
-            
+
         }
     }
 }
