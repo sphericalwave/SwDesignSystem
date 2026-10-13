@@ -152,8 +152,20 @@ public class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDeleg
         catch {
             print(error.localizedDescription)
         }
+        unmirrorPreview()
     }
-    
+
+    /// The front camera preview is mirrored by default; show the true image
+    /// instead so the viewfinder matches the saved photo.
+    func unmirrorPreview() {
+        DispatchQueue.main.async {
+            guard let connection = self.preview?.connection,
+                  connection.isVideoMirroringSupported else { return }
+            connection.automaticallyAdjustsVideoMirroring = false
+            connection.isVideoMirrored = false
+        }
+    }
+
     public func flip() {
         let newPosition: AVCaptureDevice.Position = position == .front ? .back : .front
         guard let device = Self.device(for: newPosition),
@@ -165,6 +177,7 @@ public class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDeleg
         }
         session.commitConfiguration()
         position = newPosition
+        unmirrorPreview()
     }
     
     public func takePic() {
@@ -242,6 +255,7 @@ public struct CameraPreview: UIViewRepresentable {
         view.previewLayer.session = camera.session
         view.previewLayer.videoGravity = .resizeAspectFill
         camera.preview = view.previewLayer
+        camera.unmirrorPreview()
         camera.session.startRunning()
         return view
     }
