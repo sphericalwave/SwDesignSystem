@@ -13,16 +13,25 @@ import AVFoundation
 public struct CameraView: View {
 
     @StateObject var camera: CameraModel
+    /// Shows a 1:1 viewfinder so the frame matches the square crop that follows.
+    var square: Bool
 
-    public init(camera: CameraModel) {
+    public init(camera: CameraModel, square: Bool = false) {
         self._camera = StateObject(wrappedValue: camera)
+        self.square = square
     }
     
     public var body: some View {
         ZStack {
             
-            CameraPreview(camera: camera)
-                .ignoresSafeArea(.all, edges: .all)
+            if square {
+                Color.black.ignoresSafeArea()
+                CameraPreview(camera: camera)
+                    .aspectRatio(1, contentMode: .fit)
+            } else {
+                CameraPreview(camera: camera)
+                    .ignoresSafeArea(.all, edges: .all)
+            }
             
             VStack {
                 HStack {
@@ -37,17 +46,31 @@ public struct CameraView: View {
                     Spacer()
                 }
                 Spacer()
-                Button(action: camera.takePic) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 65, height: 65)
-                        
-                        Circle()
-                            .stroke(Color.white, lineWidth: 2)
-                            .frame(width: 75, height: 75)
+                HStack {
+                    Color.clear.frame(width: 60, height: 60)
+                    Spacer()
+                    Button(action: camera.takePic) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 65, height: 65)
+                            
+                            Circle()
+                                .stroke(Color.white, lineWidth: 2)
+                                .frame(width: 75, height: 75)
+                        }
                     }
+                    Spacer()
+                    Button(action: camera.flip) {
+                        Image(systemName: "arrow.triangle.2.circlepath.camera")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .frame(width: 60, height: 60)
+                            .background(Circle().fill(Color.white.opacity(0.2)))
+                    }
+                    .accessibilityLabel("Flip Camera")
                 }
+                .padding(.horizontal, 30)
             }
         }
         .onAppear{
@@ -81,10 +104,19 @@ public class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDeleg
     @Published public var photo: UIImage?
     public var isShowingCamera: Binding<Bool>
     @Published public var showCropView = false
+    @Published public var position: AVCaptureDevice.Position
 
-    public init(img: Binding<UIImage?>, isShowingCamera: Binding<Bool>) {
+    public init(img: Binding<UIImage?>, isShowingCamera: Binding<Bool>, position: AVCaptureDevice.Position = .back) {
         self.croppedImg = img
         self.isShowingCamera = isShowingCamera
+        self.position = position
+    }
+
+    /// Dual camera where there is one (the back), otherwise the plain wide angle
+    /// — front cameras have no dual module.
+    private static func device(for position: AVCaptureDevice.Position) -> AVCaptureDevice? {
+        AVCaptureDevice.default(.builtInDualCamera, for: .video, position: position)
+            ?? AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position)
     }
     
     public func check() {
@@ -107,19 +139,45 @@ public class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDeleg
     public func setUp(){
         do {
             session.beginConfiguration()
-            let device = AVCaptureDevice.default(.builtInDualCamera, for: .video, position: .back)
-            let input = try AVCaptureDeviceInput(device: device!)
+            defer { session.commitConfiguration() }
+            guard let device = Self.device(for: position) else { return }
+            let input = try AVCaptureDeviceInput(device: device)
             if session.canAddInput(input) {
                 session.addInput(input)
             }
             if session.canAddOutput(output) {
                 session.addOutput(output)
             }
-            session.commitConfiguration()
         }
         catch {
             print(error.localizedDescription)
         }
+        unmirrorPreview()
+    }
+
+    /// The front camera preview is mirrored by default; show the true image
+    /// instead so the viewfinder matches the saved photo.
+    func unmirrorPreview() {
+        DispatchQueue.main.async {
+            guard let connection = self.preview?.connection,
+                  connection.isVideoMirroringSupported else { return }
+            connection.automaticallyAdjustsVideoMirroring = false
+            connection.isVideoMirrored = false
+        }
+    }
+
+    public func flip() {
+        let newPosition: AVCaptureDevice.Position = position == .front ? .back : .front
+        guard let device = Self.device(for: newPosition),
+              let input = try? AVCaptureDeviceInput(device: device) else { return }
+        session.beginConfiguration()
+        session.inputs.forEach { session.removeInput($0) }
+        if session.canAddInput(input) {
+            session.addInput(input)
+        }
+        session.commitConfiguration()
+        position = newPosition
+        unmirrorPreview()
     }
     
     public func takePic() {
@@ -185,17 +243,24 @@ public struct CameraPreview: UIViewRepresentable {
         self.camera = camera
     }
     
-    public func makeUIView(context: Context) -> some UIView {
-        let view = UIView(frame: UIScreen.main.bounds)
-        camera.preview = AVCaptureVideoPreviewLayer(session: camera.session)
-        camera.preview.frame = view.frame
-        camera.preview?.videoGravity = .resizeAspectFill
-        view.layer.addSublayer(camera.preview)
+    /// Backed by the preview layer itself so it tracks whatever frame SwiftUI
+    /// gives it (full screen or the square viewfinder).
+    public final class PreviewView: UIView {
+        public override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+        var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
+    }
+
+    public func makeUIView(context: Context) -> PreviewView {
+        let view = PreviewView()
+        view.previewLayer.session = camera.session
+        view.previewLayer.videoGravity = .resizeAspectFill
+        camera.preview = view.previewLayer
+        camera.unmirrorPreview()
         camera.session.startRunning()
         return view
     }
     
-    public func updateUIView(_ uiView: UIViewType, context: Context) {
+    public func updateUIView(_ uiView: PreviewView, context: Context) {
         //
     }
 }
