@@ -40,19 +40,16 @@ fileprivate struct CustomImagePicker<Content: View>: View {
             }
     }
     
-    //TODO: seems to work
-    //https://www.hackingwithswift.com/quick-start/concurrency/how-to-create-and-use-task-local-values
+    /// Opens the crop once the image has loaded, and clears the selection
+    /// so picking the same photo again still fires.
     func updateImg(item: PhotosPickerItem) {
         Task {
-            if let data = try? await photoItems?.loadTransferable(type: Data.self) {
-                if let uiImage = UIImage(data: data) {
-                    selectedImg = uiImage
-                }
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data) {
+                selectedImg = uiImage
+                showCropView = true
             }
-        }
-        
-        Task {
-            showCropView.toggle()
+            photoItems = nil
         }
     }
 }
@@ -60,8 +57,10 @@ fileprivate struct CustomImagePicker<Content: View>: View {
 @available(iOS 17.0, *)
 extension View {
     
+    /// Photo library picker followed by the full-screen `CropView`; the
+    /// cropped image lands in `croppedImg`.
     @ViewBuilder
-    func cropImagePicker(options: [CropMethod], show: Binding<Bool>, croppedImg: Binding<UIImage?>) -> some View {
+    public func cropImagePicker(options: [CropMethod], show: Binding<Bool>, croppedImg: Binding<UIImage?>) -> some View {
         CustomImagePicker(options: options, show: show, croppedImg: croppedImg) {
             self
         }
